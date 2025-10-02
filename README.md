@@ -5,6 +5,7 @@ Backend challenge built with **Django REST Framework**.
 ## 📝 Assumptions & Design Decisions
 
 - Used Django’s default User model for simplicity.
+- Admin-only based on IsStaff status from Django.
 - JWT chosen for stateless authentication (via `djangorestframework-simplejwt`).
 - Blacklist enabled for logout functionality.
 - Products require an existing category.
@@ -45,7 +46,7 @@ Interactive documentation is available for easy testing and exploration of the A
 | Action          | Endpoint                    | Notes                       |
 |-----------------|-----------------------------|-----------------------------|
 | Register        | `POST /api/register/`       | Create a new user           |
-| Login (JWT)     | `POST /api/token/`          | Returns access & refresh tokens |
+| Login (JWT)     | `POST /api/login/`          | Returns access & refresh tokens |
 | Refresh token   | `POST /api/token/refresh/`  | Get a new access token      |
 | Logout          | `POST /api/logout/`         | Blacklists refresh token    |
 
@@ -55,7 +56,7 @@ Interactive documentation is available for easy testing and exploration of the A
 
 | Field      | Type        | Description                       |
 |------------|-------------|-----------------------------------|
-| name       | CharField   | Name of the category               |
+| name       | CharField   | Unique name of the category        |
 | description| TextField   | Optional description               |
 | slug       | SlugField   | Unique slug generated from name    |
 | created_at | DateTimeField | Timestamp when created           |
@@ -67,9 +68,9 @@ Interactive documentation is available for easy testing and exploration of the A
 |------------|---------------|-------------------------------------------------|
 | name       | CharField     | Name of the product                             |
 | description| TextField     | Optional description                            |
-| price      | DecimalField  | Product price                                   |
+| price      | DecimalField  | Must be a positive number                       |
 | stock      | PositiveIntegerField | Available stock                             |
-| category   | ForeignKey    | Related category (Category model)              |
+| category   | ForeignKey (nullable) | Related category (kept as null if category deleted) |
 | created_at | DateTimeField | Timestamp when created                          |
 | updated_at | DateTimeField | Timestamp when updated                          |
 
@@ -94,3 +95,34 @@ Interactive documentation is available for easy testing and exploration of the A
 | GET       | `/api/products/{id}/`    | Public                                          |
 | PUT/PATCH | `/api/products/{id}/`    | Admin only                                      |
 | DELETE    | `/api/products/{id}/`    | Admin only                                      |
+
+#### Notes on Product Serializer
+When creating/updating a product:
+- Use `category_id` (write-only) to assign the category.
+- The response will include the full `category` object (read-only).
+
+**Example request:**
+```json
+{
+  "name": "Mouse Gamer",
+  "price": 120.50,
+  "stock": 15,
+  "category_id": 1
+}
+```
+
+**Example response:**
+```
+{
+  "id": 1,
+  "name": "Mouse Gamer",
+  "price": "120.50",
+  "stock": 15,
+  "category": {
+    "id": 1,
+    "name": "Electronics",
+    "slug": "electronics"
+  },
+  "created_at": "2025-10-01T22:40:00Z"
+}
+```
