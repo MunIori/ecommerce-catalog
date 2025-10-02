@@ -5,6 +5,7 @@ Backend challenge built with **Django REST Framework**.
 ## 📝 Assumptions & Design Decisions
 
 - Used Django’s default User model for simplicity.
+- Admin-only based on IsStaff status from Django.
 - JWT chosen for stateless authentication (via `djangorestframework-simplejwt`).
 - Blacklist enabled for logout functionality.
 - Products require an existing category.
@@ -28,6 +29,7 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
+```
 
 ## 📖 API Documentation
 
